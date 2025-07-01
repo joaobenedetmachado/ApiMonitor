@@ -1,4 +1,4 @@
-package api.monitor.models;
+package api.monitor.model;
 
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
