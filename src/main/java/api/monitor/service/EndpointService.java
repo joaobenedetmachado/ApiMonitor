@@ -5,7 +5,13 @@ import api.monitor.model.EndPoint;
 import api.monitor.repository.ApiKeyRepository;
 import api.monitor.repository.EndPointRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import api.monitor.model.EndPoint;
+import api.monitor.repository.EndPointRepository;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 public class EndpointService {
@@ -53,4 +59,41 @@ public class EndpointService {
         return endPointRepository.findByApiKeyId(apiKeyId);
     }
 
+    public List<EndpointStatus> checkAllEndpointsStatus() {
+        List<EndPoint> endpoints = endPointRepository.findAll();
+        List<EndpointStatus> statusList = new ArrayList<>();
+        for (EndPoint endpoint : endpoints) {
+            int status = getStatusCode(endpoint.getUrl());
+            statusList.add(new EndpointStatus(endpoint.getId(), endpoint.getUrl(), status));
+        }
+        return statusList;
+    }
+
+    private int getStatusCode(String urlString) {
+        try {
+            URL url = new URL(urlString);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(5000);
+            connection.connect();
+            return connection.getResponseCode();
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    public static class EndpointStatus {
+        private Long id;
+        private String url;
+        private int statusCode;
+
+        public EndpointStatus(Long id, String url, int statusCode) {
+            this.id = id;
+            this.url = url;
+            this.statusCode = statusCode;
+        }
+        public Long getId() { return id; }
+        public String getUrl() { return url; }
+        public int getStatusCode() { return statusCode; }
+    }
 }
